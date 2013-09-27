@@ -133,6 +133,18 @@ buffer from which the `shell-pop' command was invoked."
              shell-pop-universal-key)
     (define-key term-raw-map (read-kbd-macro value) 'shell-pop)))
 
+(defun shell-pop--set-not-universal-key (symbol value)
+  (set-default symbol value)
+  (defun shell-pop-reverse-pop ()
+    (interactive)
+    (let ((shell-pop-autocd-to-working-dir (not shell-pop-autocd-to-working-dir)))
+      (shell-pop nil)))
+  (when value (global-set-key (read-kbd-macro value) 'shell-pop-reverse-pop))
+  (when (and (string= shell-pop-internal-mode "ansi-term")
+	     shell-pop-universal-key)
+    (define-key term-raw-map (read-kbd-macro value) 'shell-pop-reverse-pop)))
+
+
 ;;;###autoload
 (defcustom shell-pop-universal-key nil
   "Key binding used to pop in and out of the shell.
@@ -140,6 +152,14 @@ buffer from which the `shell-pop' command was invoked."
 The input format is the same as that of `kbd'."
   :type '(choice string (const nil))
   :set 'shell-pop--set-universal-key
+  :group 'shell-pop)
+
+(defcustom shell-pop-not-universal-key nil
+  "Key binding used to pop in and out of the shell.
+
+The input format is the same as that of `kbd'."
+  :type '(choice string (const nil))
+  :set 'shell-pop--set-not-universal-key
   :group 'shell-pop)
 
 (defun shell-pop--shell-buffer-name (index)
